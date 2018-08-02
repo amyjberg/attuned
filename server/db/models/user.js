@@ -3,11 +3,11 @@ const Sequelize = require('sequelize')
 const db = require('../db')
 
 const User = db.define('user', {
-  email: {
-    type: Sequelize.STRING,
-    unique: true,
-    allowNull: false
-  },
+  // email: {
+  //   type: Sequelize.STRING,
+  //   unique: true,
+  //   allowNull: false
+  // },
   password: {
     type: Sequelize.STRING,
     // Making `.password` act like a func hides it when serializing to JSON.
@@ -24,7 +24,13 @@ const User = db.define('user', {
       return () => this.getDataValue('salt')
     }
   },
-  googleId: {
+  spotifyUrl: {
+   type: Sequelize.STRING,
+   validate: {
+     isUrl: true
+   }
+  },
+  spotifyId: {
     type: Sequelize.STRING
   }
 })
