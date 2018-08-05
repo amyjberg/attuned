@@ -14,19 +14,29 @@ if (!process.env.SPOTIFY_CLIENT_ID || !process.env.SPOTIFY_CLIENT_SECRET) {
 
   const strategy = new SpotifyStrategy(spotifyConfig, (accessToken, refreshToken, expiresIn, profile, done) => {
     console.log('=== profile', profile)
+    console.log('** access token', accessToken)
+    console.log(' ** refresh token', refreshToken)
     const options = {
       where: {
         spotifyId: profile.id,
-        spotifyUrl: profile.Url
+        spotifyUrl: profile.Url,
+        accessToken: accessToken
       }
     }
-    User.findOrCreate(options).then(([user]) => done(null, user)).catch(done)
+
+    // changing this to see if the access token updates
+    User.findOrCreate({ where: {spotifyId: profile.id} })
+      .then(([user]) => user.update({ accessToken: accessToken }))
+      .then(user => done(null, user))
+      .catch(done)
     // (err, user) => done(err, user)
   })
 
   passport.use(strategy)
 
-  router.get('/', passport.authenticate('spotify'))
+  router.get('/', passport.authenticate('spotify', {
+    scope: ['user-top-read', 'playlist-modify-private']
+  }))
 
   router.get('/callback', passport.authenticate('spotify', { failureRedirect: '/login'}), (req, res, next) => {
     res.redirect('/home')

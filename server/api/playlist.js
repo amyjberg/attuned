@@ -1,56 +1,86 @@
 const axios = require('axios')
-const { Spotify, Lyrics } = require('../db/models')
+const { User, Song } = require('../db/models')
 
 const router = require('express').Router()
 
-router.get('/:searchTerm/:energy/:sentiment', async (req, res, next) => {
+router.post('/spotify/:userId/tracks', async (req, res, next) => {
   try {
-    // find the top 50 songs that match our track name search
-    const tracks = await Spotify.findSongsBySearch(req.params.searchTerm)
+    const user = await User.findById(+req.params.userId)
+    const spotifyId = user.spotifyId
+    const { spotifyPlaylistId, trackUris } = req.body
 
-    // make our string for a bulk audio features request and send the request out
-    const trackIds = tracks.reduce((string, track) => {
-      return string + track.id + ','
-    }, '')
-    const audioFeats = await Spotify.getAudioFeatures(trackIds.slice(0, trackIds.length - 1))// to cut off last comma
-
-    // use our resulting data to make a playlist of song objects
-    let playlist = Spotify.generatePlaylist(tracks, audioFeats)
-
-    // now to find the lyrics information for each song and add it to each one...
-    const lyricsArray = await Promise.all(playlist.map(song => {
-      return Lyrics.findSongLyrics(song.name, song.artists[0])
-      })
-    )
-
-    const scores = await Promise.all(lyricsArray.map(lyrics => {
-        return Lyrics.analyzeSongLyrics(lyrics)
-      })
-    )
-
-    // update playlist tracks with the appropriate scores
-    playlist = playlist.map((song, index) => {
-      return {...song, sentiment: scores[index]} // this is returning the correct index, right?
+    const { data } = await axios({
+      method: 'post',
+      url: `https://api.spotify.com/v1/users/${spotifyId}/playlists/${spotifyPlaylistId}/tracks`,
+      headers: {
+        Authorization: `Bearer ${user.accessToken}`,
+        "Content-Type": "application/json"
+      },
+      data: {
+        uris: trackUris.split(',')
+      }
     })
 
-    // send back the playlist info in JSON!
-  } catch (err) { next (err) }
-
+    res.json(data)
+  } catch (err) { next(err) }
 })
+
+router.post('/spotify/:userId', async (req, res, next) => {
+  try {
+    const userId = +req.params.userId
+    const user = await User.findById(userId)
+    const spotifyId = user.spotifyId
+
+    const { data } = await axios({
+      method: 'post',
+      url: `https://api.spotify.com/v1/users/${spotifyId}/playlists`,
+      headers: { Authorization: `Bearer ${user.accessToken}` },
+      data: { name: req.body.name, public: false }
+    })
+
+      res.status(201).json(data)
+    } catch (err) { next(err) }
+  })
+
 
 router.post('/:userId', async (req, res, next) => {
   try {
-    // make sure req.body has the appropriately configured playlist object
-    const submitted = await Spotify.submitPlaylist(req.body, req.params.userId)
+    // remember to divide score by number of questions before sending it to me! so both are between -1 and 1
+    const quizVector = [+req.body.energy, +req.body.mood]
+    console.log('quizvector', quizVector)
 
-    // if (!submitted) {
-    //   const err = new Error('Unable to save your playlist to Spotify')
-    //   err.status = 500
-    //   return next(err)
-    // }
+    const user = await User.findById(+req.params.userId, {
+      include: [{ model: Song }]
+    })
 
-    res.status(201).json(submitted)
+    const _distance = (vectorA, vectorB) => {
+      // we know the vectors have 2 elements in them
+      const energyDistance = Math.pow(vectorA[0] - vectorB[0], 2)
+      const moodDistance = Math.pow(vectorA[1] - vectorB[1], 2)
+
+      const distance = Math.sqrt(energyDistance + moodDistance)
+      return distance
+    }
+
+    const compareFunction = (songA, songB) => {
+      const vectorA = [songA.energyLevel, songA.sentimentScore]
+      const vectorB = [songB.energyLevel, songB.sentimentScore]
+
+      if (_distance(vectorA, quizVector) > _distance(vectorB, quizVector)) {
+        return -1
+      } else if (_distance(vectorA, quizVector) > _distance(vectorB, quizVector)) {
+        return 1
+      } else {
+        return 0
+      }
+    }
+
+    const sorted = user.songs.sort(compareFunction)
+    // send back closest 5 fits
+    res.json(sorted.slice(0, 5))
+
   } catch (err) { next(err) }
 })
+
 
 module.exports = router

@@ -1,18 +1,29 @@
 import React from 'react'
 import PropTypes from 'prop-types'
 import {connect} from 'react-redux'
+import { getUserSpotifyData } from '../store/songs';
+import MoodQuiz from './mood-quiz';
 
 /**
  * COMPONENT
  */
-export const UserHome = props => {
-  const {email} = props
 
-  return (
-    <div>
-      <h3>Welcome, {email}</h3>
-    </div>
-  )
+class UserHome extends React.Component {
+
+  componentDidMount() {
+    if (this.props.user) this.props.fetchUserSongData(this.props.user.id)
+  }
+
+  render() {
+    const { user } = this.props
+
+    return (
+      <div>
+        <h3>Welcome, { user.spotifyId }</h3>
+        <MoodQuiz />
+      </div>
+    )
+  }
 }
 
 /**
@@ -20,11 +31,18 @@ export const UserHome = props => {
  */
 const mapState = state => {
   return {
-    email: state.user.email
+    user: state.user,
+    songs: state.songs
   }
 }
 
-export default connect(mapState)(UserHome)
+const mapDispatch = dispatch => {
+  return {
+    fetchUserSongData: (id) => dispatch(getUserSpotifyData(id))
+  }
+}
+
+export default connect(mapState, mapDispatch)(UserHome)
 
 /**
  * PROP TYPES

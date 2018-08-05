@@ -1,9 +1,11 @@
 import axios from 'axios'
 import history from '../history'
+import { runInNewContext } from 'vm';
 
 // ACTION TYPES
 const ADD_SONGS = 'ADD_SONGS'
 const CLEAR_PLAYLIST = 'CLEAR_PLAYLIST'
+const GOT_USER_RECS = 'GOT_USER_RECS'
 
 // INITIAL STATE
 const initialState = []
@@ -18,67 +20,53 @@ const clearPlaylist = () => ({
   type: CLEAR_PLAYLIST
 })
 
+const gotUserRecs = () => ({
+  type: GOT_USER_RECS
+})
+
 // THUNK CREATORS
-// need one for fetching the playlist based on the search
-export const fetchPlaylistFromSearch = searchInfo => {
+export const getUserSpotifyData = (userId) => {
   return async dispatch => {
-    // NOTE: make sure the search term we send to this thunk has already swapped spaces for '%20'
-    const { searchTerm, energyLevel, mood } = searchInfo
-      // we await a get request to spotify for the songs with that term
-      const { data } = await axios.get(`https://api.spotify.com/v1/search/q=${searchTerm}&type=track&limit=50`)
-
-      const playlist = []
-      let trackIds = ""
-      data.forEach(track => {
-        playlist.push({
-          id: track.id,
-          album: track.album,
-          artists: track.artists,
-          name: track.name,
-          uri: track.uri
-        })
-        trackIds += (track.id + ',')
-      })
-
-      // we await a get request to spotify for audio features for all of those songs
-      const { data } = await axios.get(`https://api.spotify.com/v1/audio-features/?ids=${trackIds}`)
-
-      data.forEach(trackInfo => {
-        const track = playlist.find(elem => elem.id === trackInfo.id)
-        track.energy = trackInfo.energy
-        track.instrumentalness = trackInfo.instrumentalness
-      }) // hopefully now our tracks in the playlist array have these features added onto them...
-
-      // we filter based on the energy level in the results
-
-
-
-    /*
-      we await a get request/get requests for the lyrics of those songs (and add the lyrics as a property on our song object)
-
-      we feed the lyrics into the sentiment analysis and add the score to our track object?
-      *** we want each track object to have its spotify id, name, audio track, energy level, lyrics, and mood score ***
-      we filter based on the mood score
-
-    */
-
-    dispatch(addSongs(playlist))
+    try {
+      await axios.get(`/api/users/${userId}/spotify-recommendations`)
+      dispatch(gotUserRecs())
+    } catch (err) { console.error(err) }
   }
 }
 
-// need one for clearing the playlist without saving to spotify
+export const createPlaylist = (moodScore, energyScore, userId) => {
+  return async dispatch => {
+    try {
+      const score = { mood: moodScore, energy: energyScore }
+      const { data } = await axios.post(`/api/playlist/${userId}`, score)
+      dispatch(addSongs(data))
+    } catch (err) { console.error(err) }
+  }
+}
+
 export const resetPlaylist = () => {
   return dispatch => {
     dispatch(clearPlaylist())
   }
 }
 
-// need one for saving the playlist to spotify (and then it clears the playlist on the store)
-export const savePlaylistToAccount = (playlist, spotifyUserId) => {
+export const savePlaylistToAccount = (playlist, userId) => {
   return async dispatch => {
-    // need to configure playlist and send it with post request, check docs for what is required
-    const { data } = await axios.post(`https://api.spotify.com/v1/users/${spotifyUserId}/playlists` )
-    dispatch(clearPlaylist())
+    // playlist object must have playlist.name, playlist.songs
+    try {
+      const { data } = await axios.post(`/api/playlist/spotify/${userId}`, { name: playlist.name }) // this works -- I make the empty playlist
+
+      const spotifyPlaylistId = data.id
+      let trackUris = playlist.songs.reduce((string, song) => {
+        string += (song.uri + ',')
+        return string
+      }, '')
+      trackUris = trackUris.slice(0, trackUris.length - 1)
+
+      const res = await axios.post(`/api/playlist/spotify/${userId}/tracks`, { spotifyPlaylistId, trackUris })
+
+      dispatch(clearPlaylist())
+    } catch (err) { console.error(err) }
   }
 }
 
