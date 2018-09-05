@@ -14,10 +14,9 @@ class QuizForm extends Component {
   render() {
     const { question } = this.props
     return (
-      <div className="question-container">
-        <h4> Let's find out how you're doing today!</h4>
+      <div className="container text-center">
         <label>{question.name}</label>
-        <div className="choice">
+        <div className="row align-items-start">
           {
             question.choices.map(choice => {
               const value = choice.value
@@ -25,10 +24,15 @@ class QuizForm extends Component {
                 <div
                   key={choice.id}
                   onClick={(evt) => this.handleSubmit(evt, question.category, value)}
-                  className="flex-item"
+                  className="col choice"
                 >
-                  <img src={choice.photoUrl} className="quiz-img" />
-                  <h5>{choice.label}</h5>
+                  <figure className="figure">
+                    <img
+                      src={choice.photoUrl}
+                      className="img-thumbnail rounded figure-img"
+                    />
+                    <figcaption className="figure-caption">{choice.label}</figcaption>
+                  </figure>
                 </div>
               )
             })

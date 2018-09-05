@@ -10,27 +10,10 @@ const AuthForm = props => {
   const {name, displayName, handleSubmit, error} = props
 
   return (
-    <div>
-      <form onSubmit={handleSubmit} name={name}>
-        <div>
-          <label htmlFor="email">
-            <small>Email</small>
-          </label>
-          <input name="email" type="text" />
-        </div>
-        <div>
-          <label htmlFor="password">
-            <small>Password</small>
-          </label>
-          <input name="password" type="password" />
-        </div>
-        <div>
-          <button type="submit">{displayName}</button>
-        </div>
-        {error && error.response && <div> {error.response.data} </div>}
-      </form>
-      {/* <a href="/auth/google">{displayName} with Google</a> */}
-      <a href="/auth/spotify">{displayName} with Spotify</a>
+    <div className="login container container justify-content-center">
+      {
+        !props.isLoggedIn ? <button className="spotifylogin col" ><a href="/auth/spotify">log into Spotify to start</a></button> : null
+      }
     </div>
   )
 }
@@ -46,7 +29,8 @@ const mapLogin = state => {
   return {
     name: 'login',
     displayName: 'Login',
-    error: state.user.error
+    error: state.user.error,
+    isLoggedIn: !!state.user.id
   }
 }
 

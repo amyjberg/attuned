@@ -1,5 +1,7 @@
 body {
   font-family: sans-serif;
+  color: white;
+  background-image: url("noisy2f2fa2.png");
 }
 
 a {
@@ -15,22 +17,94 @@ nav a {
   margin: 1em;
 }
 
+.nav {
+  background-color: #2F2FA2;
+  border-bottom-color: #553d67;
+  /* border-bottom: 5px;
+  border-bottom-left-radius: 5px;
+  border-bottom-right-radius: 5px; */
+  padding: 10px;
+}
+
 form div {
   margin: 1em;
   display: inline-block;
 }
 
-.quiz-img {
-  width: 100px;
+.playlist {
+  width: 365px;
+}
+
+img {
   padding: 10px;
+  height: 150px;
 }
 
-.flex-container {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
+.choice {
+  height: 450px;
+  color: #F64C72;
+  font-weight: bold;
+  padding-top: 30px;
+  border-radius: 15px;
 }
 
-.flex-item {
-  flex-basis: 75px;
+.choice:hover {
+  background-color: #242582;
+}
+
+.app-container {
+  padding: 50px;
+}
+
+button {
+  background-color: #99738E;
+  color: white;
+  font-weight: bold;
+}
+
+.darkpurple {
+  color: #2F2FA2;
+  font-weight: bold;
+}
+
+.spotifylogin {
+  color: white;
+  background-color: #2F2FA2;
+  border-radius: 100%;
+  height: 250px;
+  width: 250px;
+  margin: 0 auto;
+}
+
+.name {
+  font-size: 70px;
+  font-weight: bold;
+  font-family: "Josefin Sans"
+}
+
+.white {
+  color: white;
+}
+
+.pink {
+  color: #F64C72;
+  font-family: "Josefin Sans";
+}
+
+.plum {
+  color: #553D57;
+}
+
+.lightplum {
+  color: #99738E;
+}
+
+.fredericka {
+  font-family: "Do Hyeon";
+  font-size: 20px;
+}
+
+.submitted {
+  font-size: 40px;
+  font-style: "Do Hyeon"
 }
