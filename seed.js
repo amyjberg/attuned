@@ -1,7 +1,6 @@
 const { Question, Choice, Song, User } = require('./server/db/models')
 const db = require('./server/db')
-// const pipeline = require('./pipeline')
-
+// seed file with some dummy data
 
 const songs = [ { spotifyId: '5byerP6yub0Elj1gZS8DAJ',
     album: 'Let The Music Take You Home',
@@ -384,11 +383,3 @@ const main = () => {
 main()
 
 
-
-/*
-NOTE: if I get the api requests working again, I need to DELETE the user I'm creating in the seed because it doesn't have an accessToken... and I won't be able to save to spotify without the access token
-
-but i get an access token as long as I actually log in with spotify after I seeded... whew!
-
-but the song associations disappeared, so i am temporarily fetching all songs rather than the user-associated songs in /api/playlist/userId
-*/
