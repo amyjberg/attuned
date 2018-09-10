@@ -3,18 +3,18 @@ import { connect } from 'react-redux'
 import { createPlaylist, savePlaylistToAccount } from '../store/songs';
 
 class Result extends Component {
-  // needs to have a button for saving the playlist and/or starting the quiz over
-  // is that in another 'playlist' component that handles the audio?
   constructor() {
     super()
     this.state = {
       submitToSpotify: false,
-      name: ''
+      name: '',
+      submitted: false
     }
     this.saveToSpotify = this.saveToSpotify.bind(this)
     this.submitPlaylist = this.submitPlaylist.bind(this)
     this.renderButton = this.renderButton.bind(this)
     this.handleNameChange = this.handleNameChange.bind(this)
+    this.renderScores = this.renderScores.bind(this)
   }
 
   saveToSpotify(evt) {
@@ -31,6 +31,9 @@ class Result extends Component {
       songs: this.props.songs
     }
     this.props.savePlaylistToSpotify(playlistObj, this.props.user.id)
+    this.setState({
+      submitted: true
+    })
   }
 
   handleNameChange(evt) {
@@ -41,7 +44,6 @@ class Result extends Component {
 
   componentDidMount() {
     const { moodScore, energyScore, user } = this.props
-    console.log('moodscore', moodScore, 'energyscore', energyScore)
     this.props.makePlaylist(moodScore, energyScore, user.id)
   }
 
@@ -49,48 +51,85 @@ class Result extends Component {
     if (this.state.submitToSpotify) {
       return (
         <form onSubmit={this.submitPlaylist}>
-          <label htmlFor="name">Playlist Name:</label>
+          {/* <label htmlFor="name">Playlist Name:</label> */}
           <input
             type="name"
             name="name"
             value={this.state.name}
             onChange={this.handleNameChange}
+            className="form-control form-control-lg"
+            placeholder="Playlist name"
           />
-          <button type="submit" disabled={!this.state.name} >Submit</button>
+          <button
+            type="submit"
+            disabled={!this.state.name}
+            className="btn btn-lg btn-block"
+          >
+            Submit
+          </button>
         </form>
       )
     } else {
       // we have not decided to save it to spotify
-      return <button onClick={this.saveToSpotify} >Save as a playlist to Spotify</button>
+      return (
+        <button
+          onClick={this.saveToSpotify}
+          className="btn btn-lg btn-block"
+        >
+        save as a spotify playlist
+        </button>)
     }
+  }
+
+  renderScores() {
+    const { moodScore, energyScore } = this.props
+    let moodResult;
+    if (moodScore >= .33) moodResult = 'positive'
+    else if (moodScore >= -.33) moodResult = 'neutral'
+    else moodResult = 'negative'
+
+    let energyLevel;
+    if (energyScore >= .33) energyLevel = 'high'
+    else if (energyScore >= -.33) energyLevel = 'moderate'
+    else energyLevel = 'low'
+
+    return (
+      <span>{`Your mood is ${moodResult} and your energy level is ${energyLevel}`}</span>
+    )
   }
 
   render() {
     const { songs } = this.props
-
+    if (this.state.submitted) {
+      return <div className="submitted" >Your new playlist has been submitted!</div>
+    }
     return (
-      <div>
-        <h1>Try out these songs:</h1>
+      <div className="container">
+      {
+        this.renderScores()
+      }
+        <div className="playlist col shadow-lg p-3 mb-5 bg-white rounded">
+          <h1 className="darkpurple" >try these songs:</h1>
+          {
+            songs.length ? songs.map(song => (
+              <div
+                key={song.id}
+              >
+                <iframe
+                  src={`https://open.spotify.com/embed?uri=${song.uri}`}
+                  width="300"
+                  height="80"
+                  frameBorder="0"
+                  allowtransparency="true"
+                  allow="encrypted-media" >
+                </iframe>
+              </div>
+            )
+          ) : null
+          }
+          { this.renderButton() }
+        </div>
 
-        {
-          songs.length ? songs.map(song => (
-            <div key={song.id}>
-              <iframe
-                src={`https://open.spotify.com/embed?uri=${song.uri}`}
-                width="300"
-                height="80"
-                frameBorder="0"
-                allowtransparency="true"
-                allow="encrypted-media" >
-              </iframe>
-            </div>
-          )
-        ) : null
-        }
-
-        {
-          this.renderButton()
-        }
       </div>
     )
   }

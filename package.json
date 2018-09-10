@@ -1,7 +1,7 @@
 {
-  "name": "moodmusic",
+  "name": "attuned",
   "version": "1.0.0",
-  "description": "Some boilerplate code to get you started - get shakin'!",
+  "description": "An app that generates suggested songs based on the user's mood and energy level",
   "engines": {
     "node": ">= 7.0.0"
   },

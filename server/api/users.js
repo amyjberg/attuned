@@ -44,7 +44,6 @@ router.get('/:userId/spotify-recommendations', async function(req, res, next) {
     console.log('==*== getting audio features for tracks ==*==')
     const audioFeatures = await axios.get(`https://api.spotify.com/v1/audio-features/?ids=${recIds}`, header)
 
-    // each track we get back has an artists array, id, name, uri
     const songsArray = audioFeatures.data.audio_features.map(audioFeature => {
       const trackInfo = recs.data.tracks.find(track => track.id === audioFeature.id)
       return {
@@ -59,15 +58,14 @@ router.get('/:userId/spotify-recommendations', async function(req, res, next) {
     })
 
     console.log('==*== finding song lyrics ==*==')
-
     const songInfoMusixmatch = await Promise.all(songsArray.map(song => {
-      const name = song.name.replace(/\s/g, '%20')
-      const artist = song.artists[0].replace(/\s/g, '%20')
-      return axios.get(`https://api.musixmatch.com/ws/1.1/track.search?q_track=${name}&q_artist=${artist}&apikey=9c5411496232e141dfddda79d85fbdbf`)
+      const name = encodeURIComponent(song.name)
+      const artist = encodeURIComponent(song.artists[0])
+      return axios.get(`https://api.musixmatch.com/ws/1.1/track.search?q_track=${name}&q_artist=${artist}&apikey=${process.env.MUSIXMATCH_APIKEY}`)
     }))
 
     const musixMatchIds = songInfoMusixmatch.map(song => {
-      if (song.data.message.body.track_list[0]) {
+      if (song.data.message.body && song.data.message.body.track_list.length) {
         if (!song.data.message.body.track_list[0].track.has_lyrics) {
           return null
         }
@@ -79,7 +77,7 @@ router.get('/:userId/spotify-recommendations', async function(req, res, next) {
     console.log('==*== getting lyrics info ==*==')
     const lyricsInfo = await Promise.all(musixMatchIds.map(id => {
       if (id === null) return null
-      else return axios.get(`https://api.musixmatch.com/ws/1.1/track.lyrics.get?track_id=${id}&apikey=9c5411496232e141dfddda79d85fbdbf`)
+      else return axios.get(`https://api.musixmatch.com/ws/1.1/track.lyrics.get?track_id=${id}&apikey=${process.env.MUSIXMATCH_APIKEY}`)
     }))
 
     const lyrics = lyricsInfo.map(infoObject => {
@@ -96,14 +94,13 @@ router.get('/:userId/spotify-recommendations', async function(req, res, next) {
           },
           "encodingType": "UTF8"
         }
-        return axios.post(`https://language.googleapis.com/v1/documents:analyzeSentiment?key=AIzaSyCKirhcF5eAbFtpkSUt0vuCpfSXyYPj4VU`, json)
+        return axios.post(`https://language.googleapis.com/v1/documents:analyzeSentiment?key=${process.env.GOOGLE_LANGUAGE_APIKEY}`, json)
       } else {
         return null
       }
     }))
 
     const scores = lyricsAnalysis.map(analysis => {
-      console.log('==> ', analysis)
       if (analysis) return analysis.data.documentSentiment
       else return null
     })
@@ -127,7 +124,7 @@ router.get('/:userId/spotify-recommendations', async function(req, res, next) {
       } else {
         return null
       }
-    })) // each findOrCreate returns a promise array [instance, isNew]
+    }))
 
     const songInstances = songs.filter(elem => {
       if (!elem) return false
@@ -138,6 +135,7 @@ router.get('/:userId/spotify-recommendations', async function(req, res, next) {
     await user.setSongs(songInstances.map(song => {
       return song.id
     }))
+
     res.status(201).json("success")
   } catch (err) { next(err) }
 })

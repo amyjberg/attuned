@@ -24,12 +24,10 @@ if (!process.env.SPOTIFY_CLIENT_ID || !process.env.SPOTIFY_CLIENT_SECRET) {
       }
     }
 
-    // changing this to see if the access token updates
     User.findOrCreate({ where: {spotifyId: profile.id} })
       .then(([user]) => user.update({ accessToken: accessToken }))
       .then(user => done(null, user))
       .catch(done)
-    // (err, user) => done(err, user)
   })
 
   passport.use(strategy)
@@ -43,19 +41,4 @@ if (!process.env.SPOTIFY_CLIENT_ID || !process.env.SPOTIFY_CLIENT_SECRET) {
   })
 }
 
-// router.get('/', function(req, res) {
-//   var scopes = 'playlist-modify-public user-read-email';
-//   res.redirect('https://accounts.spotify.com/authorize' +
-//     '?response_type=code' +
-//     '&client_id=' + my_client_id +
-//     (scopes ? '&scope=' + encodeURIComponent(scopes) : '') +
-//     '&redirect_uri=' + encodeURIComponent('/'));
-//   });
-
-  /*
-
-  to make a new playlist, POST https://api.spotify.com/v1/users/{user_id}/playlists
-
-  */
-
-  module.exports = router
+module.exports = router

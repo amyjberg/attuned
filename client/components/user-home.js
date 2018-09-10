@@ -15,11 +15,9 @@ class UserHome extends React.Component {
   }
 
   render() {
-    const { user } = this.props
-
     return (
       <div>
-        <h3>Welcome, { user.spotifyId }</h3>
+        <h5 className="pink" >WELCOME, {this.props.user.spotifyId}</h5>
         <MoodQuiz />
       </div>
     )
