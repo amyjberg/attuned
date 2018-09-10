@@ -61,7 +61,7 @@ router.get('/:userId/spotify-recommendations', async function(req, res, next) {
     const songInfoMusixmatch = await Promise.all(songsArray.map(song => {
       const name = encodeURIComponent(song.name)
       const artist = encodeURIComponent(song.artists[0])
-      return axios.get(`https://api.musixmatch.com/ws/1.1/track.search?q_track=${name}&q_artist=${artist}&apikey=9c5411496232e141dfddda79d85fbdbf`)
+      return axios.get(`https://api.musixmatch.com/ws/1.1/track.search?q_track=${name}&q_artist=${artist}&apikey=${process.env.MUSIXMATCH_APIKEY}`)
     }))
 
     const musixMatchIds = songInfoMusixmatch.map(song => {
@@ -77,7 +77,7 @@ router.get('/:userId/spotify-recommendations', async function(req, res, next) {
     console.log('==*== getting lyrics info ==*==')
     const lyricsInfo = await Promise.all(musixMatchIds.map(id => {
       if (id === null) return null
-      else return axios.get(`https://api.musixmatch.com/ws/1.1/track.lyrics.get?track_id=${id}&apikey=9c5411496232e141dfddda79d85fbdbf`)
+      else return axios.get(`https://api.musixmatch.com/ws/1.1/track.lyrics.get?track_id=${id}&apikey=${process.env.MUSIXMATCH_APIKEY}`)
     }))
 
     const lyrics = lyricsInfo.map(infoObject => {
@@ -94,7 +94,7 @@ router.get('/:userId/spotify-recommendations', async function(req, res, next) {
           },
           "encodingType": "UTF8"
         }
-        return axios.post(`https://language.googleapis.com/v1/documents:analyzeSentiment?key=AIzaSyCKirhcF5eAbFtpkSUt0vuCpfSXyYPj4VU`, json)
+        return axios.post(`https://language.googleapis.com/v1/documents:analyzeSentiment?key=${process.env.GOOGLE_LANGUAGE_APIKEY}`, json)
       } else {
         return null
       }
