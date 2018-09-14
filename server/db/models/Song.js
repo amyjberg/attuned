@@ -1,7 +1,7 @@
 const Sequelize = require('sequelize')
 const db = require('../db')
 
-const Song = db.define('songs', {
+const Song = db.define('song', {
   spotifyId: {
     type: Sequelize.STRING,
     allowNull: false

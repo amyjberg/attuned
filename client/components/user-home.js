@@ -8,7 +8,7 @@ import MoodQuiz from './mood-quiz';
  * COMPONENT
  */
 
-class UserHome extends React.Component {
+export class UserHome extends React.Component {
 
   componentDidMount() {
     if (this.props.user) this.props.fetchUserSongData(this.props.user.id)

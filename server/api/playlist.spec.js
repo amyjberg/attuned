@@ -58,7 +58,7 @@ describe('Playlist routes', () => {
 
     it('sends back an array of songs', async () => {
       const res = await request(app)
-        .post('/api/playlist/1', {})
+        .post('/api/playlist/1', { energy: 0, mood: 0})
 
         expect(res.body).to.be.an('array')
         expect(res.body.length).to.be.equal(4)
