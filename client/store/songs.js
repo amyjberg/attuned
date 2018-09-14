@@ -2,7 +2,7 @@ import axios from 'axios'
 import history from '../history'
 
 // ACTION TYPES
-const ADD_SONGS = 'ADD_SONGS'
+const ADDED_SONGS = 'ADDED_SONGS'
 const CLEAR_PLAYLIST = 'CLEAR_PLAYLIST'
 const GOT_USER_RECS = 'GOT_USER_RECS'
 
@@ -10,8 +10,8 @@ const GOT_USER_RECS = 'GOT_USER_RECS'
 const initialState = []
 
 // ACTION CREATORS
-const addSongs = playlist => ({
-  type: ADD_SONGS,
+const addedSongs = playlist => ({
+  type: ADDED_SONGS,
   songs: playlist
 })
 
@@ -38,7 +38,7 @@ export const createPlaylist = (moodScore, energyScore, userId) => {
     try {
       const score = { mood: moodScore, energy: energyScore }
       const { data } = await axios.post(`/api/playlist/${userId}`, score)
-      dispatch(addSongs(data))
+      dispatch(addedSongs(data))
     } catch (err) { console.error(err) }
   }
 }
@@ -74,7 +74,7 @@ export const savePlaylistToAccount = (playlist, userId) => {
 
 const reducer = (state = initialState, action) => {
   switch (action.type) {
-    case ADD_SONGS:
+    case ADDED_SONGS:
       return action.songs
     case CLEAR_PLAYLIST:
       return []
