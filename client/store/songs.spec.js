@@ -41,7 +41,15 @@ describe('thunk creators', () => {
   })
 
   describe('createPlaylist', () => {
-    it('', () => {})
+    it('eventually dispatches addSongs', async () => {
+      const fakeSongs = ['song one', 'song two']
+      mockAxios.onPost('/api/playlist/1').replyOnce(fakeSongs)
+      await store.dispatch(createPlaylist(0, 0, 1))
+
+      const actions = store.getActions()
+      expect(actions[0].type).to.be.equal('ADDED_SONGS')
+      expect(actions[0].songs).to.be.equal(fakeSongs)
+    })
   })
 
   describe('resetPlaylist', () => {
